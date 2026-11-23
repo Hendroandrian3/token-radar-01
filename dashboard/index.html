@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — pre-token protocols ranked by implied launch value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <p class="kicker">TOKEN RADAR &middot; DEFI LAUNCH BOARD</p>
+    <h1>Every protocol with no token yet, ranked by what its launch would be worth</h1>
+    <p class="lede">One sealed DefiLlama snapshot, priced against the tokens already trading in each
+    protocol&rsquo;s own category. No names are special-cased: the same arithmetic scores every row.</p>
+    <p class="meta" id="meta-line">Loading the snapshot&hellip;</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="stats" id="stats" aria-label="Board summary"></section>
+
+  <section class="panel controls" aria-label="Filter and sort the board">
+    <label class="field grow">Search
+      <input id="q" type="search" placeholder="Protocol name or slug&hellip;" autocomplete="off">
+    </label>
+    <label class="field">Category
+      <select id="category"><option value="all">All categories</option></select>
+    </label>
+    <label class="field">Chain
+      <select id="chain"><option value="all">All chains</option></select>
+    </label>
+    <label class="field">Sort by
+      <select id="sort">
+        <option value="implied">Implied value</option>
+        <option value="tvl">TVL</option>
+        <option value="growth">7-day growth</option>
+        <option value="age">Age (tracked longest)</option>
+        <option value="multiple">Peer multiple</option>
+      </select>
+    </label>
+    <label class="check"><input id="watchlist-only" type="checkbox"> Watchlist only</label>
+    <p class="count" id="count-line"></p>
+  </section>
+
+  <section class="panel">
+    <div class="table-scroll">
+      <table id="board">
+        <thead>
+          <tr>
+            <th class="num">#</th>
+            <th>Protocol</th>
+            <th>Category</th>
+            <th>Chain</th>
+            <th class="num">TVL</th>
+            <th class="num">7d</th>
+            <th class="num">Age</th>
+            <th class="num">Peer &times;</th>
+            <th class="num">Implied value</th>
+            <th>Confidence</th>
+          </tr>
+        </thead>
+        <tbody id="board-body"></tbody>
+      </table>
+    </div>
+    <p class="hint">Click any row to open its detail view and farm plan. Rank is the model&rsquo;s claim:
+    rank 1 is the board&rsquo;s most valuable launch.</p>
+  </section>
+
+  <section class="panel detail" id="detail" aria-label="Protocol detail"></section>
+
+  <section class="panel">
+    <h2>Already trading &mdash; the reference set</h2>
+    <p>These protocols already have a token, so they are <strong>not</strong> ranked on this board.
+    They are the market the multiples come from: each row shows its live market cap against its TVL.
+    The board above is priced from these numbers, never mixed into them.</p>
+    <div class="table-scroll">
+      <table id="live">
+        <thead>
+          <tr>
+            <th>Protocol</th>
+            <th>Category</th>
+            <th>Chain</th>
+            <th class="num">TVL</th>
+            <th class="num">Market cap</th>
+            <th class="num">Mcap / TVL</th>
+          </tr>
+        </thead>
+        <tbody id="live-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel method">
+    <h2>How the number is made</h2>
+    <p><strong>Implied value = TVL &times; peer multiple &times; growth factor &times; patience factor.</strong></p>
+    <ul>
+      <li><strong>Peer multiple:</strong> the median market-cap-to-TVL multiple of the tokens already
+      trading in the protocol&rsquo;s own category. A category with fewer than 3 live peers falls back
+      to the whole-market median. Clamped to 0.02&ndash;2.00.</li>
+      <li><strong>Growth factor:</strong> from the 7-day TVL change, clamped to &minus;40%…+80%,
+      worth 0.84&times; to 1.32&times;. No reported change counts as flat.</li>
+      <li><strong>Patience factor:</strong> from how long the protocol has been tracked with no token
+      recorded — 0.75 for a new listing, rising to 1.00 after three years. Unknown listing date counts 0.85.</li>
+      <li><strong>Confidence</strong> follows the peer sample: high with 8+ peers and a known listing
+      date, medium with 3+, otherwise low.</li>
+    </ul>
+    <p class="fine">The snapshot says a protocol <em>records</em> no token — never that it has none.
+    A protocol on the list may still hold a token its DefiLlama record does not carry. Implied value is
+    this board&rsquo;s own claim, not a forecast and not financial advice: it does not predict whether
+    or when any token is issued. Farm steps are a starting plan, not a guarantee of any reward.</p>
+  </section>
+</main>
+
+<footer class="wrap fine">
+  <p>Token Radar &middot; built from one sealed DefiLlama snapshot &middot; rendered with no network:
+  every number on this page ships in the data file beside it.</p>
+</footer>
+
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
