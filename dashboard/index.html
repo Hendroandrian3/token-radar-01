@@ -54,10 +54,8 @@
             <th>Chain</th>
             <th class="num">TVL</th>
             <th class="num">7d</th>
-            <th class="num">Age</th>
-            <th class="num">Peer &times;</th>
             <th class="num">Implied value</th>
-            <th>Confidence</th>
+            <th class="num">Launch odds</th>
           </tr>
         </thead>
         <tbody id="board-body"></tbody>
@@ -105,6 +103,26 @@
       <li><strong>Confidence</strong> follows the peer sample: high with 8+ peers and a known listing
       date, medium with 3+, otherwise low.</li>
     </ul>
+    <h2>How rough the yardstick is</h2>
+    <p class="formula" id="validation-line">Testing the yardstick&hellip;</p>
+    <p>Every implied value is shown as a <strong>range</strong>, not just a point: the same arithmetic
+    with the peer multiple at its 25th and 75th percentile, so the spread of the peers is visible
+    instead of hidden. The test behind the range is a leave-one-out check on the tokens already
+    trading: each one is priced from its peers <em>excluding itself</em> and compared with its real
+    market cap. The yardstick is unbiased on the median but rough — a typical error of several-fold —
+    which is why the board ranks by the point estimate and shows the range beside it. The growth and
+    patience tilts are small on purpose: on the same test they do not beat the peer multiple alone,
+    so they tilt the price instead of driving it.</p>
+    <h2>Launch odds and the money view</h2>
+    <p><strong>Launch odds</strong> are the peers&rsquo; own launch record: the share of the
+    snapshot&rsquo;s protocols in the protocol&rsquo;s category that already record a token, shrunk
+    toward the whole-market rate so a small category never reads 0% or 100%. The odds do not change
+    the rank — rank is the implied value — but they change the decision: the board&rsquo;s top rows
+    sit in Risk Curators, the category least likely to ever launch a token, and the odds say so
+    plainly. Each protocol&rsquo;s detail view carries the <strong>money view</strong>: the
+    odds-weighted farmer pool at a stated 5% farmer share of the implied value, and what farming
+    costs in gas and hours. The pool is the whole prize at those odds, before it is split across
+    every farmer — it is never divided by hours into a wage, because no single farmer takes it all.</p>
     <p class="fine">The snapshot says a protocol <em>records</em> no token — never that it has none.
     A protocol on the list may still hold a token its DefiLlama record does not carry. Implied value is
     this board&rsquo;s own claim, not a forecast and not financial advice: it does not predict whether

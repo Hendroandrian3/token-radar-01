@@ -26,41 +26,41 @@ body {
 .top {
   background: var(--navy);
   color: #f4f7fb;
-  padding: 34px 0 26px;
+  padding: 22px 0 16px;
   border-bottom: 5px solid var(--amber);
 }
 .kicker {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   color: #f5b94c;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
 }
-.top h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.2; max-width: 22em; }
-.lede { margin: 0 0 10px; color: #c7d3e4; max-width: 62em; }
+.top h1 { margin: 0 0 6px; font-size: 26px; line-height: 1.2; max-width: 26em; }
+.lede { margin: 0 0 8px; color: #c7d3e4; max-width: 62em; }
 .meta { margin: 0; color: #93a6c0; font-size: 13px; }
 
 .stats {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  margin: 18px 0;
+  gap: 10px;
+  margin: 12px 0;
 }
 .stat {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 12px 14px;
+  padding: 10px 12px;
 }
-.stat b { display: block; font-size: 24px; line-height: 1.15; color: var(--navy); }
+.stat b { display: block; font-size: 21px; line-height: 1.15; color: var(--navy); }
 .stat span { color: var(--muted); font-size: 12.5px; }
 
 .panel {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 16px 18px;
-  margin: 0 0 18px;
+  padding: 13px 16px;
+  margin: 0 0 12px;
 }
 .panel h2 { margin: 0 0 8px; font-size: 19px; color: var(--navy); }
 .panel p { margin: 0 0 10px; }
@@ -87,11 +87,14 @@ input[type="search"]:focus, select:focus { outline: 2px solid var(--amber); outl
 .count { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 13px; }
 
 .table-scroll { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; font-size: 14px; }
-th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
 th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
 th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
 td.num { font-variant-numeric: tabular-nums; }
+/* The range under an implied value: the peer spread, small and muted. */
+.range { display: block; color: var(--muted); font-size: 11.5px; font-weight: 400; }
+.implied { font-weight: 700; color: var(--navy); }
 tbody tr { cursor: pointer; }
 tbody tr:hover { background: #f6f8fb; }
 tbody tr.selected { background: var(--amber-soft); }
@@ -119,7 +122,7 @@ tbody tr.selected td:first-child { box-shadow: inset 3px 0 0 var(--amber); }
 .detail .sub { color: var(--muted); margin-bottom: 12px; }
 .kv {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin: 0 0 14px;
 }

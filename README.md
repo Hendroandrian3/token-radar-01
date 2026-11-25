@@ -20,7 +20,13 @@ Implied value = TVL × peer multiple × growth factor × patience factor.
 - **Growth factor**: from the 7-day TVL change, clamped to −40%…+80%.
 - **Patience factor**: from how long the protocol has been tracked with no token recorded — 0.75 for a new listing, rising to 1.00 after three years.
 
-The board covers all 40 watchlist protocols plus 158 early pre-token finds below the $50M floor — 198 rows in all. Live-token protocols are kept apart as the reference set the multiples come from, never ranked. Each row carries a 7-step farm plan with costs and times.
+The board covers all 40 watchlist protocols plus 158 early pre-token finds below the $50M floor — 198 rows in all. Live-token protocols are kept apart as the reference set the multiples come from, never ranked. Each row carries an 8-step farm plan with costs and times, ending in a money view.
+
+## How rough the yardstick is
+
+Every implied value is shown as a **range**, not just a point: the same arithmetic with the peer multiple at its 25th and 75th percentile. The range is tested, not asserted — a leave-one-out check on the 128 live tokens (each priced from its peers excluding itself, against its real market cap) gives a median ratio of 1.02×, a median absolute log error of 1.74, within 2× for 21% and within 3× for 32%. The peer multiple alone scores 1.71 on the same error, so the growth and patience tilts are kept small on purpose. The yardstick is unbiased on the median and rough in the tails.
+
+**Launch odds** are the peers' own launch record: the share of the snapshot's protocols in a category that already record a token, shrunk toward the whole-market rate. Odds do not change the rank, but they change the decision — the board's top rows sit in Risk Curators, the category least likely to ever launch a token. The **money view** in each detail view states the odds-weighted farmer pool at a 5% farmer share, with the farm's gas and hours; the pool is the whole prize at those odds, before it is split across every farmer, and is never divided by hours into a wage.
 
 ## Layout
 

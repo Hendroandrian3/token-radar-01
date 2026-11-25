@@ -114,6 +114,41 @@ const GAS: Record<string, string> = {
   Blast: '$0.10 to $0.50',
 };
 
+/** Midpoint of the gas range above, in whole US dollars, for farm economics. */
+const GAS_MID_USD: Record<string, number> = {
+  Ethereum: 6,
+  Base: 0.3,
+  Arbitrum: 0.5,
+  Optimism: 0.3,
+  Solana: 0.01,
+  BSC: 0.25,
+  'BNB Chain': 0.25,
+  Polygon: 0.12,
+  Avalanche: 0.4,
+  Tron: 2,
+  zkSync: 0.5,
+  Linea: 0.3,
+  Scroll: 0.3,
+  Mode: 0.17,
+  Blast: 0.3,
+};
+
+/**
+ * What farming one protocol costs in time and gas: about 45 minutes to set
+ * up (fund, first move, main position), 10 minutes a week while holding,
+ * 10 minutes a month to check announcements, and 2–3 transactions to unwind.
+ * The hold window follows the protocol's age: 90 days when tracked over a
+ * year, 60 days otherwise. Gas is the chain's midpoint times the transaction
+ * count. Both figures are estimates the farm plan states as such.
+ */
+export function farmEconomics(chain: string, ageDays: number | null): { hours: number; txs: number; gasUsd: number } {
+  const holdDays = (ageDays ?? 0) >= 365 ? 90 : 60;
+  const hours = Math.round((0.75 + (holdDays / 7) * (10 / 60) + (holdDays / 30) * (10 / 60)) * 10) / 10;
+  const txs = Math.round(3 + holdDays / 7 + 2.5);
+  const gasUsd = Math.round(txs * (GAS_MID_USD[chain] ?? 1.25) * 100) / 100;
+  return { hours, txs, gasUsd };
+}
+
 function gasFor(chain: string): string {
   return GAS[chain] ?? '$0.50 to $2';
 }
@@ -126,10 +161,14 @@ function ageText(ageDays: number | null): string {
 }
 
 /**
- * Seven farm steps for one protocol. Amounts follow its TVL: a book over
- * $1B gets a $250 first position, $100M–$1B gets $150, below that $100.
- * The hold window follows its age: protocols tracked over a year get 90
- * days, younger ones 60.
+ * Seven farm steps for one protocol, plus an eighth: the money view — the
+ * odds-weighted farmer pool at a stated 5% farmer share, and what farming
+ * costs in gas and hours. The pool is the whole prize at those odds, before
+ * it is split across every farmer: it is never divided by hours into a wage,
+ * because no single farmer takes it all. Amounts follow its TVL: a book over
+ * $1B gets a $250 first position, $100M–$1B gets $150, below that $100. The
+ * hold window follows its age: protocols tracked over a year get 90 days,
+ * younger ones 60.
  */
 export function farmPlan(p: SnapProtocol, ctx: PlanContext): string[] {
   const chain = p.chains[0] ?? 'its main chain';
@@ -144,6 +183,21 @@ export function farmPlan(p: SnapProtocol, ctx: PlanContext): string[] {
     p.tvl_usd >= 1e9
       ? `$${(p.tvl_usd / 1e9).toFixed(2)}B`
       : `$${Math.round(p.tvl_usd / 1e6)}M`;
+  const money = (n: number): string =>
+    n >= 1e9 ? `$${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${Math.round(n / 1e3)}K` : `$${Math.round(n)}`;
+  const oddsPct = Math.round(ctx.odds * 100);
+  const costPerHour = Math.round((ctx.farmCostUsd / ctx.farmHours) * 100) / 100;
+  const verdict =
+    ctx.odds >= 0.25
+      ? 'worth a small position'
+      : ctx.odds >= 0.1
+        ? 'a small position is defensible'
+        : 'farm it only if you would use it anyway';
+  const moneyView =
+    `The money view: at ${oddsPct}% launch odds in ${category}, a 5% farmer share of the ` +
+    `${money(ctx.implied)} implied value is worth about ${money(ctx.oddsWeighted)} before it is split across ` +
+    `every farmer. Farming costs about $${ctx.farmCostUsd} in gas and ${ctx.farmHours} hours ` +
+    `(about $${costPerHour} an hour in gas) — ${verdict}.`;
 
   return [
     `Open a fresh wallet on ${chain}${otherChains} and fund it with $${first + 50} — $${first} to deploy and the rest for gas. Moving funds costs about ${gas} per transaction and takes 10–20 minutes. Never share the seed phrase with any site or person.`,
@@ -153,5 +207,6 @@ export function farmPlan(p: SnapProtocol, ctx: PlanContext): string[] {
     `Check ${name}'s points, season or rewards page and its official announcements at least once a month for a new campaign or snapshot. This costs nothing and takes 5–10 minutes, and it is where a launch is announced first.`,
     `Hold the position for at least ${holdDays} days. ${name} has already run ${ageText(ctx.ageDays)} with no token recorded, so patience is the trade: an early exit forfeits whatever a launch would pay to the holders still there.`,
     `When a token launches, or you decide to stop, unwind the position in two or three transactions rather than one, and write every transaction hash and date in your own notes. Unwinding costs about ${gas} per transaction and takes 10–15 minutes.`,
+    moneyView,
   ];
 }

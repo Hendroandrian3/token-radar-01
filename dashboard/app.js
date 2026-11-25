@@ -3,6 +3,27 @@
 // detail view with its farm plan, and the live-token reference table.
 // No network: every byte it shows is in data.js. State lives in the URL's
 // query string, so a filtered view or a detail view is a link of its own.
+//
+// The model, in one place (lib/radar.ts buildRadar): implied value = TVL x
+// peer multiple x growth factor x patience factor, where the peer multiple
+// is the median mcap/TVL of the live tokens in the protocol's own category
+// (whole-market median when a category has fewer than 3 peers), clamped
+// 0.02-2.00. No name is special-cased. Three honest additions ride on the
+// same figures: a RANGE (the same arithmetic at the peers' 25th/75th
+// percentile), LAUNCH ODDS (the share of the snapshot's protocols in the
+// category that already record a token, shrunk toward the whole-market
+// rate), and a MONEY VIEW (the odds-weighted farmer pool at a stated 5%
+// farmer share, with the farm's gas and hours). The pool is the whole prize
+// at those odds, before it is split across every farmer: it is never
+// divided by hours into a wage, because no single farmer takes it all.
+// VALIDATION (lib/radar.ts, leave-one-out on the 128 live tokens, each
+// priced from its peers excluding itself against its real market cap):
+// median ratio 1.02x, median absolute log error 1.74, within 2x for 21%,
+// within 3x for 32%. The peer multiple alone scores 1.71 on the same
+// error, so the growth and patience tilts are kept small on purpose: they
+// tilt the price instead of driving it. The yardstick is unbiased on the
+// median and rough in the tails — which is why the board shows ranges,
+// odds and the test itself instead of a bare point estimate.
 (function () {
   'use strict';
 
@@ -47,11 +68,25 @@
 
   // ---- header facts -------------------------------------------------------
   var meta = DATA.meta;
+  var v = meta.validation;
   document.getElementById('meta-line').textContent =
     'Snapshot ' + meta.as_of + ' · ' + meta.protocols_total + ' protocols at $5M+ TVL · ' +
     meta.watchlist_total + ' on the watchlist · ' + meta.rows_total + ' ranked (' +
     meta.early_total + ' early finds below the $50M floor) · whole-market peer multiple ' +
-    meta.global_multiple.toFixed(2) + 'x';
+    meta.global_multiple.toFixed(2) + 'x · tested: the peer yardstick lands within 2× of the real ' +
+    'market cap for ' + Math.round(v.within_2x * 100) + '% of the ' + v.live_tested +
+    ' live tokens (leave-one-out, median ' + v.median_ratio.toFixed(2) + '×)';
+
+  var validationLine = document.getElementById('validation-line');
+  if (validationLine) {
+    validationLine.textContent =
+      'Leave-one-out on the ' + v.live_tested + ' tokens already trading — each priced from its ' +
+      'peers excluding itself, against its real market cap: median ratio ' + v.median_ratio.toFixed(2) +
+      '×, median absolute log error ' + v.median_abs_log_error.toFixed(2) + ', within 2× for ' +
+      Math.round(v.within_2x * 100) + '%, within 3× for ' + Math.round(v.within_3x * 100) +
+      '%. The peer multiple alone scores ' + v.multiple_only_median_abs_log_error.toFixed(2) +
+      ' on the same error, so the growth and patience tilts stay small.';
+  }
 
   var stats = document.getElementById('stats');
   var statDefs = [
@@ -129,7 +164,7 @@
     if (rows.length === 0) {
       var tr = el('tr');
       var td = el('td', 'empty', 'No protocol matches this filter. Loosen it to see the board again.');
-      td.colSpan = 10;
+      td.colSpan = 8;
       tr.appendChild(td);
       tbody.appendChild(tr);
     }
@@ -140,6 +175,7 @@
       var nameTd = el('td');
       nameTd.appendChild(el('span', 'name', r.name + ' '));
       if (r.on_watchlist) nameTd.appendChild(el('span', 'watch', 'WATCHLIST'));
+      nameTd.appendChild(el('span', 'pill ' + r.confidence, r.confidence));
       nameTd.appendChild(el('span', 'slug', r.slug));
       tr.appendChild(nameTd);
       tr.appendChild(el('td', null, r.category));
@@ -148,12 +184,10 @@
       var g = el('td', 'num', fmtPct(r.change_7d));
       if (r.change_7d !== null) g.className += r.change_7d >= 0 ? ' up' : ' down';
       tr.appendChild(g);
-      tr.appendChild(el('td', 'num', fmtAge(r.age_days)));
-      tr.appendChild(el('td', 'num', r.peer_multiple.toFixed(2) + 'x'));
-      tr.appendChild(el('td', 'num', fmtUsd(r.implied_value_usd)));
-      var c = el('td');
-      c.appendChild(el('span', 'pill ' + r.confidence, r.confidence));
-      tr.appendChild(c);
+      var imp = el('td', 'num implied', fmtUsd(r.implied_value_usd));
+      imp.appendChild(el('span', 'range', fmtUsd(r.implied_low_usd) + '–' + fmtUsd(r.implied_high_usd)));
+      tr.appendChild(imp);
+      tr.appendChild(el('td', 'num', Math.round(r.token_odds * 100) + '%'));
       tr.addEventListener('click', function () {
         state.selected = r.slug;
         syncUrl();
@@ -187,9 +221,11 @@
     var kv = el('div', 'kv');
     [
       [fmtUsd(r.implied_value_usd), 'implied launch value'],
+      [fmtUsd(r.implied_low_usd) + ' – ' + fmtUsd(r.implied_high_usd), 'honest range (peer 25th–75th)'],
       [fmtUsd(r.tvl_usd), 'TVL'],
       [r.peer_multiple.toFixed(2) + 'x · ' + r.peer_count + ' peers', 'category peer multiple'],
       [fmtPct(r.change_7d) + ' · ' + fmtAge(r.age_days), '7-day growth · age tracked'],
+      [Math.round(r.token_odds * 100) + '%', 'launch odds in ' + r.category],
     ].forEach(function (d) {
       var cell = el('div');
       cell.appendChild(el('b', null, d[0]));
@@ -202,6 +238,12 @@
       fmtUsd(r.implied_value_usd) + ' implied value · confidence ' + r.confidence +
       ' (' + r.peer_count + ' live-token peers in ' + r.category + ')';
     box.appendChild(formula);
+    var money = el('p', 'formula');
+    money.textContent = 'Money view: at ' + Math.round(r.token_odds * 100) + '% launch odds, a 5% farmer share of the ' +
+      fmtUsd(r.implied_value_usd) + ' implied value is worth about ' + fmtUsd(r.odds_weighted_usd) +
+      ' before it is split across every farmer. Farming costs about $' + r.farm_cost_usd + ' in gas and ' +
+      r.farm_hours + ' hours (about $' + (r.farm_cost_usd / r.farm_hours).toFixed(2) + ' an hour in gas).';
+    box.appendChild(money);
     box.appendChild(el('h2', null, 'Farm plan'));
     var ol = el('ol', 'steps');
     r.farm_steps.forEach(function (s) { ol.appendChild(el('li', null, s)); });
